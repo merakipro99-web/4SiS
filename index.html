@@ -22,45 +22,35 @@
     <div class="grid" id="shop-floor">Loading products...</div>
 
     <script>
-        // Replace this string with your exact Google Apps Script Web App URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbxTD8YBwjUyq-JxBkW3FsSGBzRwzFX3-jbuA1u7_XX1IZUVSvzQp-D2ZJ4QEDySBvsG_w/exec"; 
-        const WHATSAPP_NUMBER = "919876543210"; // Predefined number with country code (no spaces/plus)
+        const API_URL = "https://script.google.com/macros/s/AKfycbzqusi-hAl3byuSgCdKyNJXfnxihn1LUsaSdm_3h5UXDWZBWe0fN_PatqPouMgFlamHdg/exec"; 
+        const WHATSAPP_NUMBER = "917025070759"; 
 
         async function loadProducts() {
             try {
                 const response = await fetch(API_URL);
-                // Clean numerical format (No '+' sign, no '$' sign)
-const WHATSAPP_NUMBER = "917025070759"; 
+                const products = await response.json();
+                const container = document.getElementById('shop-floor');
+                container.innerHTML = '';
 
-async function loadProducts() {
-    try {
-        const response = await fetch(API_URL);
-        const products = await response.json();
-        const container = document.getElementById('shop-floor');
-        container.innerHTML = '';
+                if (products.length === 0) {
+                    container.innerText = "No products found.";
+                    return;
+                }
 
-        products.forEach(item => {
-            if(!item.itemCode) return;
-
-            const isOutOfStock = parseInt(item.stock) <= 0;
-            
-            const message = encodeURIComponent(`Hello! I want to buy:\nProduct: ${item.name}\nItem Code: ${item.itemCode}\nPrice: ${item.price}`);
-            
-            // Corrected neat clean link layout template literal
-            const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;                    // Skip empty rows if any
-                    if(!item.itemCode) return;
-
-                    const isOutOfStock = parseInt(item.stock) <= 0;
+                products.forEach(item => {
+                    // Temporarily allowing fallback if itemCode is broken on Google Sheet side
+                    const displayCode = (item.itemCode && item.itemCode !== "#REF!") ? item.itemCode : "GEN-001";
+                    const isOutOfStock = item.stock !== "" && parseInt(item.stock) <= 0;
                     
-                    // Create custom WhatsApp message string
-                    const message = encodeURIComponent(`Hello! I want to buy:\nProduct: ${item.name}\nItem Code: ${item.itemCode}\nPrice: ${item.price}`);
-                    const waLink = `https://wa.me/$+917025070759?text=${message}`;
+                    const message = encodeURIComponent(`Hello! I want to buy:\nProduct: ${item.name}\nItem Code: ${displayCode}\nPrice: ${item.price}`);
+                    const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+
                     container.innerHTML += `
                         <div class="card">
                             <div>
-                                <img src="${item.image || 'https://via.placeholder.com/250'}" alt="${item.name}">
+                                <img src="${(item.image && item.image !== '#REF!') ? item.image : 'https://via.placeholder.com/250'}" alt="${item.name}">
                                 <h3>${item.name}</h3>
-                                <div class="code">Code: ${item.itemCode}</div>
+                                <div class="code">Code: ${displayCode}</div>
                             </div>
                             <div>
                                 <div class="price">₹${item.price}</div>
