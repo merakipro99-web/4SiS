@@ -29,12 +29,25 @@
         async function loadProducts() {
             try {
                 const response = await fetch(API_URL);
-                const products = await response.json();
-                const container = document.getElementById('shop-floor');
-                container.innerHTML = '';
+                // Clean numerical format (No '+' sign, no '$' sign)
+const WHATSAPP_NUMBER = "917025070759"; 
 
-                products.forEach(item => {
-                    // Skip empty rows if any
+async function loadProducts() {
+    try {
+        const response = await fetch(API_URL);
+        const products = await response.json();
+        const container = document.getElementById('shop-floor');
+        container.innerHTML = '';
+
+        products.forEach(item => {
+            if(!item.itemCode) return;
+
+            const isOutOfStock = parseInt(item.stock) <= 0;
+            
+            const message = encodeURIComponent(`Hello! I want to buy:\nProduct: ${item.name}\nItem Code: ${item.itemCode}\nPrice: ${item.price}`);
+            
+            // Corrected neat clean link layout template literal
+            const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;                    // Skip empty rows if any
                     if(!item.itemCode) return;
 
                     const isOutOfStock = parseInt(item.stock) <= 0;
