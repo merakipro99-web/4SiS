@@ -25,6 +25,18 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbzqusi-hAl3byuSgCdKyNJXfnxihn1LUsaSdm_3h5UXDWZBWe0fN_PatqPouMgFlamHdg/exec"; 
         const WHATSAPP_NUMBER = "917025070759"; 
 
+        // Helper function to force convert ANY Google Drive link style into a direct web image stream
+        function getDirectImgLink(url) {
+            if (!url || url.includes("#REF!")) return 'https://via.placeholder.com/250';
+            let id = "";
+            if (url.includes("id=")) {
+                id = url.split("id=")[1].split("&")[0];
+            } else if (url.includes("file/d/")) {
+                id = url.split("file/d/")[1].split("/")[0];
+            }
+            return id ? `https://drive.google.com/uc?export=download&id=${id}` : url;
+        }
+
         async function loadProducts() {
             try {
                 const response = await fetch(API_URL);
@@ -32,15 +44,18 @@
                 const container = document.getElementById('shop-floor');
                 container.innerHTML = '';
 
-                if (products.length === 0) {
+                // Strict filter: Ignore any items that don't have a valid product name text string
+                const realProducts = products.filter(item => item.name && String(item.name).trim() !== "" && String(item.name) !== "0");
+
+                if (realProducts.length === 0) {
                     container.innerText = "No products found.";
                     return;
                 }
 
-                products.forEach(item => {
-                    // Temporarily allowing fallback if itemCode is broken on Google Sheet side
-                    const displayCode = (item.itemCode && item.itemCode !== "#REF!") ? item.itemCode : "GEN-001";
+                realProducts.forEach(item => {
+                    const displayCode = (item.itemCode && item.itemCode !== "#REF!") ? item.itemCode : "ITEM-000";
                     const isOutOfStock = item.stock !== "" && parseInt(item.stock) <= 0;
+                    const finalImg = getDirectImgLink(item.image);
                     
                     const message = encodeURIComponent(`Hello! I want to buy:\nProduct: ${item.name}\nItem Code: ${displayCode}\nPrice: ${item.price}`);
                     const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
@@ -48,7 +63,7 @@
                     container.innerHTML += `
                         <div class="card">
                             <div>
-                                <img src="${(item.image && item.image !== '#REF!') ? item.image : 'https://via.placeholder.com/250'}" alt="${item.name}">
+                                <img src="${finalImg}" alt="${item.name}">
                                 <h3>${item.name}</h3>
                                 <div class="code">Code: ${displayCode}</div>
                             </div>
